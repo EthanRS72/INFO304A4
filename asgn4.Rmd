@@ -1,0 +1,78 @@
+---
+  title: "INFO304 Assignment 4 2022"
+author: "Ethan Smith - 5652106"
+output:
+  pdf_document: default
+html_document:
+  df_print: paged
+editor_options: 
+  markdown: 
+  wrap: 72
+---
+  
+```{r setup, include=FALSE}
+set.seed(5)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(dev = 'png') # make images smaller resolution in pdf
+source("model.R", local = knitr::knit_global())
+source("bedcount.R", local = knitr::knit_global())
+#source("hosplab.R", local = knitr::knit_global())
+```
+
+## QUESTION ONE (30 MARKS) - Review of paper
+
+PAPER: Regression tree construction by bootstrap: Model search for DRG-systems applied to Austrian health-data - Thomas Grubinger, Conrad Kobel and Karl-Peter Pfeiffer (2010)
+
+https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-10-9
+
+In this paper Grubinger, Kobel and Pfeiffer aim to improve on existing methods to model length of stay using Austrian health data. Existing models to allocate hospital resources by a patient's length of stay based on conjunctive rules often do not align with how the hospitals operate, this means they often need to be adjusted through domain knowledge which decreases accuracy. 
+The authors aim to improve on the CART models currently used with a different form of decision tree to increase the accuracy of LOS predictions and create more diverse trees to account for more scenarios. This also aims to create trees that require less readjustment to align with medical practices. 
+
+The Austrian health system uses conjunctive rules which allow Length of stay to be modelled as a decision tree. These rules mean that every condition must be met to be true. The Austrian-DRG data used is comprised of two main categories for codes. MEL codes are used for patients who are at the hospital for a pre-arranged procedure while general admission patients receive an HDG code. Both of these codes have subcodes called LDF referring to the specific procedure or diagnosis a patient receives. In this paper, the authors use eight different datasets. Four of these are MEL-LDF codes and the other four and HDG-LDF codes. The number of features is different for each dataset and no detailed list of variables is provided by the authors but they do mention the datasets include patient information such as diagnosis, procedures, age and sex.
+
+Prior to modelling the authors do not mention any analysis of the features of the eight datasets nor do they mention any transformations or explicit feature selection. Due to trees being modelled feature selection will be provided by the model at each split. The only analysis provided prior to modelling is an explanation of how they believe the CART model can be improved. They mention that the CART model is a greedy algorithm, so their aim is to try and improve on this by modelling globally optimised trees. Possible approaches to this they considered were: evolutionary algorithms, bootstrapping and Monte-Carlo simulation methods. Bootstrapping was decided on as the method of choice as they aimed to maintain accuracy over a wide range of cases, bootstrapping allows this as many smaller datasets can be formed to build trees. This helps to optimise a final model as many potential scenarios have been modelled which can account for small changes in data having a significant effect on the resulting model. The bootstrapping method of choice was bumping, unlike ensemble methods bumping only results in a single tree which allows for a more interpretable model. By using B bootstrapped datasets to create B trees a wide range of candidate models are able to be assessed for their accuracy and suitability (B = 200). Each sample had a minimum of 30 observations.
+
+To maintain accuracy in comparisons the authors only compared trees if they had the same size, trees were given a limit of 16 internal nodes and a max depth of 5. This resulted in a maximum of 17 possible groups patients could be filtered into based on the maximum of 5 tree rules. No formal explanation was given for these parameters but the range of values seems to imply that a wide range of complexities needed to be tested while trying to maintain consistency and interpretability in the models. As the authors are attempting to improve on a previous model their models use the mean squared error, for a direct comparison with the existing CART models.
+
+In the first modelling stage, the authors wanted to show evidence that bumping can improve the CART models. To do this, trees were trained and tested on bootstrapped data using a single run of k-fold cross-validation with 10 folds on all datasets for all tree sizes between 0 and 20 internal nodes. No minimum split was set on the tree nodes to allow all branches to grow to the same depth for consistency. Figure 3 in the paper shows the reduction in MSE in comparison to the CART models from the best tree built by the bootstrap. Each tree appears to reduce MSE by 0.4%-1.0%.
+
+After K-fold cross-validation a second evaluation was made for all tree sizes between 2 and 16 internal nodes by taking all trees at least as good as the CART model and selecting candidate models at each tree size. To be considered a candidate model a tree had to share the same split variables as the majority. From this group, the best-performing model was selected as a candidate model. This provided a good set of candidate models for length of stay that not only improved on the existing CART models but also provided more diversity from the varying bootstrap samples and tree complexities.
+
+Along with creating a range of more diverse trees, bumping was also shown to improve accuracy against the CART trees on average between 1.06% to 4.90% on the eight datasets across a varying range of tree sizes. In some cases, Bumped trees were found that were no worse than the CART model while having a lower model complexity. As the authors have only provided the change in MSE between the CART and bumped models there is no indication on precisely how accurate either of these models are. Having more accurate and diverse models means that not only are the results more reliable than the CART models but can also account for more scenarios and give more options to medical professionals that may be more in line with hospital operation protocols.
+
+\newpage
+
+## QUESTION TWO (70 MARKS) - LOS modelling
+
+1. Describe and visualise the datasets for both cities, focussing on the length of stay (LOS) and the relationship to the explanatories that are known at time of admission. Include a discussion that compares the cities in terms of health delivery, the population cohort, bed count over time, etc. (20 marks)
+
+```{r, warning=FALSE}
+
+```
+
+Based on the behaviour of bed count what other explanatory variable should be created? Ensure you create this variable and save the cityA and cityB data with the additional explanatory. What (if any) transformations are suggested by the data? 
+
+```{r, warning=FALSE}
+
+```
+
+2. Build separate linear models (with additional explanatories and transformations) to predict LOS for cityA and cityB using all of the data – DO NOT USE the initial diagnosis class (diag01). 
+
+Discuss why LOS is difficult to model. How might you go about making the problem easier? Explore and discuss several options for improving LOS modelling and present some initial approaches. This can all be done just using linear regression, logistic regression or simple decision trees (rpart) depending on how you modify the data. If you want to assess accuracy use a 90% training-10% test split over 50 replicates using RRSE as the error measurement. (25 marks)
+
+```{r, warning=FALSE}
+
+```
+
+3. The diag01 variable defines the initial diagnosis for each patient on admission. Select a diagnosis that has a reasonable number of occurrences for both cities (i.e. at least 300), and build a linear model to predict LOS just for patients with this diagnosis. To assess the quality of the model use a 90% training-10% test split for 50 replicates and measure error using RRSE (so the result gives an measure effectively against the mean – see lab notes).
+Compare and discuss the results in relation to the type of diagnosis you have chosen, it’s distribution of LOS, patient characteristics, etc. (15 marks)
+
+```{r, warning=FALSE}
+
+```
+
+4. Discuss why predicting LOS is a difficult task and reflect on the way bed counts (i.e. admissions) are currently handled. Is there any way this might be improved? Discuss some approaches to break the problem down into more tractable aspects for managing admissions and predicting LOS. What does this suggest about building a model for LOS over the entire country? (10 marks)
+
+```{r, warning=FALSE}
+
+```
