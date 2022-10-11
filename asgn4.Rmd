@@ -44,10 +44,16 @@ Along with creating a range of more diverse trees, bumping was also shown to imp
 
 ## QUESTION TWO (70 MARKS) - LOS modelling
 
-1. Describe and visualise the datasets for both cities, focussing on the length of stay (LOS) and the relationship to the explanatories that are known at time of admission. Include a discussion that compares the cities in terms of health delivery, the population cohort, bed count over time, etc. (20 marks)
+1. Describe and visualise the datasets for both cities, focusing on the length of stay (LOS) and the relationship to the explanatories that are known at time of admission. Include a discussion that compares the cities in terms of health delivery, the population cohort, bed count over time, etc. (20 marks)
 
 ```{r, warning=FALSE}
-
+cita <- read.csv("cityA.csv")
+citb <- read.csv("cityB.csv")
+cita.bedcount <- bedcount(cita)
+citb.bedcount <- bedcount(citb)
+par(mfrow = c(2,1))
+plot.bc(cita.bedcount, r=8:14)
+plot.bc(citb.bedcount, r=50:100)
 ```
 
 Based on the behaviour of bed count what other explanatory variable should be created? Ensure you create this variable and save the cityA and cityB data with the additional explanatory. What (if any) transformations are suggested by the data? 
