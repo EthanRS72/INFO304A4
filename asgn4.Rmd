@@ -17,6 +17,7 @@ knitr::opts_chunk$set(dev = 'png') # make images smaller resolution in pdf
 source("model.R", local = knitr::knit_global())
 source("bedcount.R", local = knitr::knit_global())
 #source("hosplab.R", local = knitr::knit_global())
+library(tidyverse)
 ```
 
 ## QUESTION ONE (30 MARKS) - Review of paper
@@ -49,11 +50,42 @@ Along with creating a range of more diverse trees, bumping was also shown to imp
 ```{r, warning=FALSE}
 cita <- read.csv("cityA.csv")
 citb <- read.csv("cityB.csv")
+#convert dates to date format
+cita$EVSTDATE <- as.Date(cita$EVSTDATE, "%Y-%m-%d")
+cita$EVENDATE <- as.Date(cita$EVENDATE, "%Y-%m-%d")
+citb$EVSTDATE <- as.Date(citb$EVSTDATE, "%Y-%m-%d")
+citb$EVENDATE <- as.Date(citb$EVENDATE, "%Y-%m-%d")
+
+#create bedcounts
 cita.bedcount <- bedcount(cita)
 citb.bedcount <- bedcount(citb)
-par(mfrow = c(2,1))
+par(mfrow = c(2,2))
 plot.bc(cita.bedcount, r=8:14)
+title("City A")
+plot.bc(cita.bedcount, r=50:100)
+plot.bc(citb.bedcount, r=8:14)
+title("City B")
 plot.bc(citb.bedcount, r=50:100)
+```
+
+```{r, warning=FALSE}
+par(mfrow = c(2,1))
+plot.bc(cita.bedcount)
+plot.bc(citb.bedcount)
+title("Both cities")
+```
+```{r, warning=FALSE}
+par(mfrow = c(2,1))
+plot.bc(cita.bedcount, r = 176:190)
+plot.bc(citb.bedcount, r = 176:190)
+cita <- cita %>% arrange(cita$EVSTDATE)
+citb <- citb %>% arrange(citb$EVSTDATE)
+test <- cita[cita$EVSTDATE >= "1984-07-07" & cita$EVSTDATE <= "1985-06-23", ]
+test <- test[test$EVENDATE >= "1984-06-20" & test$EVENDATE <= "1985-06-17", ]
+test.bedcount <- bedcount(test)
+plot.bc(test.bedcount)
+ch <- which(cita$EVSTDATE >= "1984-12-22" & cita$EVSTDATE <= "1985-01-05")
+
 ```
 
 Based on the behaviour of bed count what other explanatory variable should be created? Ensure you create this variable and save the cityA and cityB data with the additional explanatory. What (if any) transformations are suggested by the data? 
