@@ -9,7 +9,7 @@ editor_options:
   markdown: 
   wrap: 72
 ---
-  
+
 ```{r setup, include=FALSE}
 set.seed(5)
 knitr::opts_chunk$set(echo = TRUE)
@@ -24,10 +24,9 @@ library(tidyverse)
 
 PAPER: Regression tree construction by bootstrap: Model search for DRG-systems applied to Austrian health-data - Thomas Grubinger, Conrad Kobel and Karl-Peter Pfeiffer (2010)
 
-https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-10-9
+<https://bmcmedinformdecismak.biomedcentral.com/articles/10.1186/1472-6947-10-9>
 
-In this paper Grubinger, Kobel and Pfeiffer aim to improve on existing methods to model length of stay using Austrian health data. Existing models to allocate hospital resources by a patient's length of stay based on conjunctive rules often do not align with how the hospitals operate, this means they often need to be adjusted through domain knowledge which decreases accuracy. 
-The authors aim to improve on the CART models currently used with a different form of decision tree to increase the accuracy of LOS predictions and create more diverse trees to account for more scenarios. This also aims to create trees that require less readjustment to align with medical practices. 
+In this paper Grubinger, Kobel and Pfeiffer aim to improve on existing methods to model length of stay using Austrian health data. Existing models to allocate hospital resources by a patient's length of stay based on conjunctive rules often do not align with how the hospitals operate, this means they often need to be adjusted through domain knowledge which decreases accuracy. The authors aim to improve on the CART models currently used with a different form of decision tree to increase the accuracy of LOS predictions and create more diverse trees to account for more scenarios. This also aims to create trees that require less readjustment to align with medical practices.
 
 The Austrian health system uses conjunctive rules which allow Length of stay to be modelled as a decision tree. These rules mean that every condition must be met to be true. The Austrian-DRG data used is comprised of two main categories for codes. MEL codes are used for patients who are at the hospital for a pre-arranged procedure while general admission patients receive an HDG code. Both of these codes have subcodes called LDF referring to the specific procedure or diagnosis a patient receives. In this paper, the authors use eight different datasets. Four of these are MEL-LDF codes and the other four and HDG-LDF codes. The number of features is different for each dataset and no detailed list of variables is provided by the authors but they do mention the datasets include patient information such as diagnosis, procedures, age and sex.
 
@@ -45,7 +44,7 @@ Along with creating a range of more diverse trees, bumping was also shown to imp
 
 ## QUESTION TWO (70 MARKS) - LOS modelling
 
-1. Describe and visualise the datasets for both cities, focusing on the length of stay (LOS) and the relationship to the explanatories that are known at time of admission. Include a discussion that compares the cities in terms of health delivery, the population cohort, bed count over time, etc. (20 marks)
+1.  Describe and visualise the datasets for both cities, focusing on the length of stay (LOS) and the relationship to the explanatories that are known at time of admission. Include a discussion that compares the cities in terms of health delivery, the population cohort, bed count over time, etc. (20 marks)
 
 Based on the behaviour of bed count what other explanatory variable should be created? Ensure you create this variable and save the cityA and cityB data with the additional explanatory. What (if any) transformations are suggested by the data?
 
@@ -66,6 +65,7 @@ plot.bc(cita.bedcount)
 plot.bc(citb.bedcount)
 title("Both cities")
 ```
+
 Looking at the overall bed counts for both cities they appear to have the same trends. The coloured dots refer to specific days of the week so it appears some day tend to have less patients in the hospital than others. For both cities it also appears that the number of beds occupied decreases around the Christmas / new years period. The tails on the end do not provide an accurate representation of the bed counts as they only exist due to cut off dates for admission within this one year sample. From the y axis scale it appears city A's hospital is twice as large as city B's hospital which appears to align with the size of the datasets as city A's dataset has twice as many patients.
 
 NOTE: Due to the initial diagnosis variable having approximately 4000 factor levels, I will not be analyzing it here.
@@ -78,8 +78,8 @@ hist(citb$LOS)
 cita$LOS <- log(cita$LOS)
 citb$LOS <- log(citb$LOS)
 ```
-It is visible here that the response variable length of stay has an extreme right skew. I am going to apply a log transformation to this variable. Due to how extreme the skew is, this transformation will not normalize the length of stay variable but it will help to separate the patients more.
 
+It is visible here that the response variable length of stay has an extreme right skew. I am going to apply a log transformation to this variable. Due to how extreme the skew is, this transformation will not normalize the length of stay variable but it will help to separate the patients more.
 
 ```{r, warning=FALSE}
 cita_clean <- cita
@@ -108,6 +108,7 @@ title("City A")
 plot.bc(citb.bedcount)
 title("City B")
 ```
+
 Here I have performed some modifications on the data to try lessen the effect of the tails. The tails are still existent but by tidying the ends I have made the change in bed count less extreme as the data cuts off. I have also displayed some correlations between some of the variables. From here we can see a severe lack of relationship between the variables. This makes modelling length of stay much more difficult as there is a severe lack of variation in length of stay that can be provided by these predictors. The information we have is essentially noise.
 
 The new bed count plots I have provided using the tided date ranges and the log transformation on LOS makes the affect of bed count by day much more visible and the drop in the holiday period is also much more noticeable. These plots shows that both of these are clear systematic trends based on hospital operating methods so they should be modelled.
@@ -168,21 +169,23 @@ for (i in 1:nrow(citb_clean)) {
   citb_clean$weekday[i] <- new
 }
 
-par(mfrow = c(1,2))
+par(mfrow = c(2,2))
 boxplot(cita.bedcount$Beds ~ cita.bedcount$hol)
 title("City A")
 boxplot(citb.bedcount$Beds ~ citb.bedcount$hol)
 title("City B")
 
-par(mfrow = c(1,2))
+
 boxplot(cita.bedcount$Beds ~ cita.bedcount$weekday)
 title("City A")
 boxplot(citb.bedcount$Beds ~ citb.bedcount$weekday)
 title("City B")
 ```
+
 Here I have shown a closer view at the two visible trends. For the trends by day it can be seen that the hospital appears to try and reduce the number of patients hospitalized over the weekend before bringing their intake back up at the start of the working week. For the holiday period we can see that intake leading up to christmas consistently reduces and normal capacity does not return until early January. After implementing these as variables for both datasets and plotting them it appears that there is significant evidence that supports the reduction in bed count shown in previous figures for both the weekend and holiday period. The amount of variance in these periods also appears to significantly decrease which may make these time periods easier to model.
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, echo=FALSE}
+par(mfrow=c(2,1))
 boxplot(cita$LOS ~ cita$HLTHSPEC, ylim = c(0,5), las = 2, cex.axis = 0.7, 
         main = "City A LOS by Health Spec")
 boxplot(citb$LOS ~ citb$HLTHSPEC, ylim = c(0,5), las = 2, cex.axis = 0.7,
@@ -191,7 +194,7 @@ boxplot(citb$LOS ~ citb$HLTHSPEC, ylim = c(0,5), las = 2, cex.axis = 0.7,
 
 Comparing the two cities LOS by Health specification it appears that City A appears to deal with a much wider range of cases which is to be expected as the hospital is larger. Overall Length of stay appears to be similar between the two cities for matching cases. Both hospitals also appear to have unique cases they have dealt with (eg city A has no Y code patients but more types of cases overall).
 
-```{r, warning=FALSE}
+```{r, warning=FALSE,echo = FALSE}
 cita_clean$Dep06 <- as.factor(cita_clean$Dep06)
 citb_clean$Dep06 <- as.factor(citb_clean$Dep06)
 par(mfrow = c(1,2))
@@ -203,13 +206,14 @@ boxplot(citb_clean$LOS ~ citb_clean$Dep06,
 boxplot(cita_clean$LOS ~ cita_clean$EVENT_TYPE)
 boxplot(citb_clean$LOS ~ citb_clean$EVENT_TYPE)
 ```
+
 As a final comparison of the hospital operations for both hospitals it appears that patients who are only intended to stay for a day do stay for a significantly shorter time. It also appears that city B's hospital has a psychiatric ward (IM) which city A does not have. This once again highlights that the different hospitals do have different procedures and cases that need to be accounted for in a model which can add extra complexities.
 
 Finally it also appears that a patients decile has no affect on Length of stay and just adds noise.
 
 \newpage
 
-2. Build separate linear models (with additional explanatories and transformations) to predict LOS for cityA and cityB using all of the data – DO NOT USE the initial diagnosis class (diag01). 
+2.  Build separate linear models (with additional explanatories and transformations) to predict LOS for cityA and cityB using all of the data -- DO NOT USE the initial diagnosis class (diag01).
 
 Discuss why LOS is difficult to model. How might you go about making the problem easier? Explore and discuss several options for improving LOS modelling and present some initial approaches. This can all be done just using linear regression, logistic regression or simple decision trees (rpart) depending on how you modify the data. If you want to assess accuracy use a 90% training-10% test split over 50 replicates using RRSE as the error measurement. (25 marks)
 
@@ -250,7 +254,8 @@ train.row <- sample(nrow(cita_g),0.9*nrow(cita_g),replace=FALSE)
 train.data <- cita_g[train.row,]  # Create training and testing data
 test.data <- cita_g[-train.row,]
 
-cagam <- glm(LOS ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday, data = train.data, family = Gamma(link = "identity"))
+cagam <- glm(LOS ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday,
+             data = train.data, family = Gamma(link = "identity"))
 
 rssea[i] <- sqrt(sum((test.data$LOS - predict(cagam, test.data))^2,na.rm=T) / sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
 
@@ -258,26 +263,72 @@ train.row <- sample(nrow(citb_g),0.9*nrow(citb_g),replace=FALSE)
 train.data <- citb_g[train.row,]  # Create training and testing data
 test.data <- citb_g[-train.row,]
 
-cagam <- glm(LOS ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday, data = train.data, family = Gamma(link = "identity"))
+cagam <- glm(LOS ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday,
+             data = train.data, family = Gamma(link = "identity"))
 
 rsseb[i] <- sqrt(sum((test.data$LOS - predict(cagam, test.data))^2,na.rm=T) / sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
 }
 
 par(mfrow = c(1,2))
-boxplot(rssea, main = "rsse of 50 gamma models city A", ylab = "rsse")
-boxplot(rsseb, main = "rsse of 50 gamma models city B", ylab = "rsse")
+boxplot(rssea, main = "rsse of 50 gamma models city A", ylab = "rsse",
+        cex.main = 0.7, ylim = c(0.9,1))
+boxplot(rsseb, main = "rsse of 50 gamma models city B", ylab = "rsse",
+        cex.main = 0.7, ylim = c(0.9,1))
 
 
 par(mfrow=c(2,2))
 plot(cagam)
 ```
 
-Surprisingly to me trying to account for the response distribution in the model has resulted in a worse performing model which has also not fixed the failures in model assumptions (rrse increase of 0.05-0.10). This makes me believe that the issues with modelling length of stay may be more associated with the quality of predictors than the highly skewed behavior of the response. This is also the same for a model built on all data with health codes included.
+Surprisingly to me trying to account for the response distribution in the model has resulted in a worse performing model which has also not fixed the failures in model assumptions (rrse increase of 0.05-0.15). This makes me believe that the issues with modelling length of stay may be more associated with the quality of predictors than the highly skewed behavior of the response. This is also the same for a model built on all data with health codes included.
 
 
+The second model I am going to trial is fitting a random forest to the data, I want to fit this model for two reasons. The first being that tree methods are incredibly stable and are not affected by non-linearity so the skew of length of stay will not have an adverse effect on modelling. The second reason for a random forest is that because we have many different aspects of the data (many different treatments ect) I believe an ensemble method may help to obtain more accurate predictions
+
+```{r, warning=FALSE, cache = TRUE}
+library(randomForest)
+rfa <- c()
+rfb <- c()
+
+for (i in 1:10) {
+train.row <- sample(nrow(cita_g),0.9*nrow(cita_g),replace=FALSE)
+train.data <- cita_g[train.row,]  # Create training and testing data
+test.data <- cita_g[-train.row,]
+
+mdl <- randomForest(x = train.data[-c(4,5,6,9)], y = train.data$LOS, ntree = 50)
+
+rfa[i] <- sqrt(sum((test.data$LOS - predict(mdl, test.data))^2,na.rm=T) /
+                 sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
+
+train.row <- sample(nrow(citb_g),0.9*nrow(citb_g),replace=FALSE)
+train.data <- citb_g[train.row,]  # Create training and testing data
+test.data <- citb_g[-train.row,]
+
+mdl <- randomForest(x = train.data[-c(4,5,6,9)], y = train.data$LOS,
+                    ntree= 50)
+
+rfb[i] <- sqrt(sum((test.data$LOS - predict(mdl, test.data))^2,na.rm=T) /
+                 sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
+}
+par(mfrow = c(1,2))
+boxplot(rfa, main = "rsse of 50 rf models city A", ylab = "rsse",
+        ylim = c(0.8,1))
+boxplot(rfb, main = "rsse of 50 rf models City B", ylab = "rsse",
+        ylim = c(0.8,1))
+```
+
+The use of a more stable random forest model does not seem to improve on the linear model. This suggests that the issues with modelling length of stay are due to the quality of the predictor variables. I also believe the issues with modelling length of stay are also due to how the complexity of the problem itself so methods to try and solve particular aspects of the problem should be using local models should be used over a global length of stay model in order to gain any true insight to the problem.
+
+NOTE: Due to the complexity of the random forest model I have run this code as 10 runs for each city with 50 trees per run, this is a possible reason why the variance is lower in rrse and also a potential reason for a lack of change in rrse. I did trial a single model which used 500 trees which did appear to slightly reduce rrse but I have not considered this a conclusive result for consistency.
+
+To do this I am going to fit a logistic regression model which aims to predict if a patient is going to stay in hospital for longer than a day. This seems like a fair problem to model as patients who only stayed in hospital for a single day make up over half the observations for both datasets.
+
+To assess this problem I will compare the accuracy of the logistic regression model to a set of predictions where every observation is predicted as the mode of the dataset (patients only stay one day).
 ```{r, warning=FALSE}
 rssea <- c()
+rssea_base <- c()
 rsseb <- c()
+rsseb_base <- c()
 
 cita_clean$multiple <- 0
 citb_clean$multiple <- 0
@@ -302,65 +353,171 @@ train.row <- sample(nrow(cita_clean),0.9*nrow(cita_clean),replace=FALSE)
 train.data <- cita_clean[train.row,]  # Create training and testing data
 test.data <- cita_clean[-train.row,]
 
-cagam <- glm(multiple ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday, data = train.data, family = binomial(link = "logit"))
 
-rssea[i] <- sqrt(sum((test.data$multiple - predict(cagam, test.data))^2,na.rm=T) / sum((test.data$multiple - mean(test.data$multiple,na.rm=T))^2))
+
+log.mod <- glm(multiple ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol +
+                 weekday, data=train.data, family="binomial")
+train.pred <- predict(log.mod,newdata=train.data,type="response")
+
+act <- as.numeric(train.data$multiple)-1
+p.order <- order(train.pred)
+probs <- train.pred[p.order]
+act.order <- act[p.order]
+act.cs <- cumsum(act.order)
+x <- 1:length(act.cs)
+threshold <- x - 2*act.cs
+t <- as.numeric(probs[(which(threshold==max(threshold)))[1]])
+
+test.pred <- predict(log.mod,newdata=test.data,type="response")
+pred.vals <- as.factor(ifelse(test.pred >=t,1,0))
+conf.mat <- caret::confusionMatrix(data = pred.vals, 
+                                     reference=test.data$multiple)
+
+test.pred2 <- predict(log.mod,newdata=test.data,type="response")
+pred.vals2 <- as.factor(ifelse(test.pred2 >=1,1,0))
+conf.mat2 <- caret::confusionMatrix(data = pred.vals2, 
+                                     reference=test.data$multiple)
+rssea[i] <- (conf.mat$table[1]+conf.mat$table[4])/nrow(test.data) 
+rssea_base[i] <- (conf.mat2$table[1]+conf.mat2$table[4])/nrow(test.data)
 
 train.row <- sample(nrow(citb_clean),0.9*nrow(citb_clean),replace=FALSE)
 train.data <- citb_clean[train.row,]  # Create training and testing data
 test.data <- citb_clean[-train.row,]
 
-cagam <- glm(multiple ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol + weekday, data = train.data, family = binomial(link = "logit"))
+log.mod <- glm(multiple ~ AGE_ADM + GENDER + EVENT_TYPE + Dep06 + hol +
+                 weekday, data=train.data, family="binomial")
+train.pred <- predict(log.mod,newdata=train.data,type="response")
 
-prob = predict(caga)
+act <- as.numeric(train.data$multiple)-1
+p.order <- order(train.pred)
+probs <- train.pred[p.order]
+act.order <- act[p.order]
+act.cs <- cumsum(act.order)
+x <- 1:length(act.cs)
+threshold <- x - 2*act.cs
+t <- as.numeric(probs[(which(threshold==max(threshold)))[1]])
 
-rsseb[i] <- rrse(test.data$multiple,)
+test.pred <- predict(log.mod,newdata=test.data,type="response")
+pred.vals <- as.factor(ifelse(test.pred >=t,1,0))
+conf.mat <- caret::confusionMatrix(data = pred.vals, 
+                                     reference=test.data$multiple)
+
+test.pred2 <- predict(log.mod,newdata=test.data,type="response")
+pred.vals2 <- as.factor(ifelse(test.pred2 >=1,1,0))
+conf.mat2 <- caret::confusionMatrix(data = pred.vals2, 
+                                     reference=test.data$multiple)
+rsseb[i] <- (conf.mat$table[1]+conf.mat$table[4])/nrow(test.data) 
+rsseb_base[i] <- (conf.mat2$table[1]+conf.mat2$table[4])/nrow(test.data)
+
 }
 
-par(mfrow = c(1,2))
-boxplot(rssea, main = "rsse of 50 logistic models city A", ylab = "rsse")
-boxplot(rsseb, main = "rsse of 50 logistic models city B", ylab = "rsse")
+par(mfrow = c(2,2))
+boxplot(rssea, main = "Accuracy of Logistic model City A",
+        ylab ="Accuracy", ylim = c(0.3,0.8), cex.main = 0.7)
+boxplot(rssea_base, 
+        main = "Accuracy of logistic models predicting mode City A",
+        ylab ="Accuracy",ylim = c(0.3,0.8), cex.main = 0.7)
+boxplot(rsseb, main = "Accuracy of Logistic models City B", 
+        ylab ="Accuracy", ylim = c(0.3,0.8), cex.main = 0.7)
+boxplot(rsseb_base, 
+        main = "Accuracy of logistic models predicting mode City B", 
+        ylab = "Accuracy",ylim = c(0.3,0.8), cex.main = 0.7)
 ```
 
+From these plots it is visible that modelling a smaller problem based on length of stay is much more appropriate than modelling length of stay itself. For both cities the logistic regression model greatly improves in accuracy compared to just predicting the most common class (LOS = 1). For these models I have also used some old code to optimize the prediction threshold for each model.
 
+From these models I believe there is significant evidence to suggest that any form of LOS modelling should be performed through local models or a simpler choice of response to model.
 
-The second model I am going to trial is fitting a random forest to the data, I want to fit this model for two reasons. The first being that tree methods are incredibly stable and are not affected by non-linearity so the skew of length of stay will not have an adverse effect on modelling. The second reason for a random forest is that because we have many different aspects of the data (many different treatments ect) I believe an ensemble method may help to obtain more accurate predictions
+\newpage
 
-
-```{r, warning=FALSE, cache = TRUE}
-library(randomForest)
-rssea <- c()
-rsseb <- c()
-
-for (i in 1:10) {
-train.row <- sample(nrow(cita_g),0.9*nrow(cita_g),replace=FALSE)
-train.data <- cita_g[train.row,]  # Create training and testing data
-test.data <- cita_g[-train.row,]
-
-mdl <- randomForest(x = train.data[-c(6,9)], y = train.data$LOS, ntree = 50)
-
-rssea[i] <- sqrt(sum((test.data$LOS - predict(mdl, test.data))^2,na.rm=T) / sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
-
-train.row <- sample(nrow(citb_g),0.9*nrow(citb_g),replace=FALSE)
-train.data <- citb_g[train.row,]  # Create training and testing data
-test.data <- citb_g[-train.row,]
-
-mdl <- randomForest(x = train.data[-c(6,9)], y = train.data$LOS, ntree = 50)
-
-rsseb[i] <- sqrt(sum((test.data$LOS - predict(mdl, test.data))^2,na.rm=T) / sum((test.data$LOS - mean(test.data$LOS,na.rm=T))^2))
-}
-
-par(mfrow = c(1,2))
-boxplot(rssea, main = "rsse of 50 rf models city A", ylab = "rsse")
-boxplot(rssea, main = "rsse of 50 rf models City B", ylab = "rsse")
-```
-
-3. The diag01 variable defines the initial diagnosis for each patient on admission. Select a diagnosis that has a reasonable number of occurrences for both cities (i.e. at least 300), and build a linear model to predict LOS just for patients with this diagnosis. To assess the quality of the model use a 90% training-10% test split for 50 replicates and measure error using RRSE (so the result gives an measure effectively against the mean – see lab notes).
-Compare and discuss the results in relation to the type of diagnosis you have chosen, it’s distribution of LOS, patient characteristics, etc. (15 marks)
+3.The diag01 variable defines the initial diagnosis for each patient on admission. Select a diagnosis that has a reasonable number of occurrences for both cities (i.e. at least 300), and build a linear model to predict LOS just for patients with this diagnosis. To assess the quality of the model use a 90% training-10% test split for 50 replicates and measure error using RRSE (so the result gives an measure effectively against the mean -- see lab notes). Compare and discuss the results in relation to the type of diagnosis you have chosen, it's distribution of LOS, patient characteristics, etc. (15 marks)
 
 ```{r, warning=FALSE}
-
+head(sort(table(cita_clean$diag01), decreasing = TRUE), 10)
+head(sort(table(citb_clean$diag01), decreasing = TRUE), 10)
+cita.R074 <- cita_clean[which(cita_clean$diag01 == 'R074'),]
+citb.R074 <- cita_clean[which(citb_clean$diag01 == 'R074'),]
+par(mfrow=c(1,2))
+hist(cita.R074$LOS)
+hist(citb.R074$LOS)
 ```
 
+I chose the health code R074 as for both cities they have a similar number of observations. The health code is used for unspecified chest pain. I assume this mainly relates to patients who come with chest pain to the emergency ward. As this also relates to unspecified pain it is also plausible that this may contain a fair amount of variation in length of stay as it could relate to different diagnoses.
+
+Looking at the distribution of length of stay across both cities for R074 patients it appears that city B tends to keep patients in for a longer period of time. This could potentially be due a smaller city being able to spend a longer period of time monitoring patients due to a smaller intake or could be due to a larger city having more patients come in which could have a much higher proportion of lower risk patients.
+
+
+```{r, warning=FALSE}
+par(mfrow=c(1,2))
+boxplot(cita.R074$LOS ~ cita.R074$HLTHSPEC, ylim = c(0,4), las = 2, cex.axis = 0.7, 
+        main = "City A LOS by Health Spec")
+boxplot(citb.R074$LOS ~ citb.R074$HLTHSPEC, ylim = c(0,4), las = 2, cex.axis = 0.7,
+        main = "City B LOS by Health Spec")
+
+plot(cita.R074$AGE_ADM, cita.R074$LOS, main = "City A LOS by Age (R074)")
+plot(citb.R074$AGE_ADM, citb.R074$LOS, main = "City B LOS by Age (R074)")
+
+boxplot(cita.R074$LOS ~ cita.R074$weekday, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City A LOS by Day")
+boxplot(citb.R074$LOS ~ citb.R074$weekday, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City B LOS by Day")
+
+boxplot(cita.R074$LOS ~ cita.R074$Dep06, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City A LOS by Decile")
+boxplot(citb.R074$LOS ~ citb.R074$Dep06, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City B LOS by Decile")
+
+boxplot(cita.R074$LOS ~ cita.R074$EVENT_TYPE, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City A LOS by Event type")
+boxplot(citb.R074$LOS ~ citb.R074$EVENT_TYPE, ylim = c(0,4), las = 2, cex.axis = 0.7, main = "City B LOS by Event type")
+```
+
+To reassess the explanatory based on the subset I have replotted some relationships between LOS and the predictors. First for patients who have a case where hospitalization is longer than a day there appears that the age of a patient has a relationship with their length of stay. This could be modeled with an interaction term between age and the response variable for multiple days I made for the logistic regression model.
+
+It also appears that city B deals with a wider range of health codes related to unspecified chest pain which may be a factor in the less skewed distribution of length of stay compared to city A. There is also a visual suggestion that event types may have different effects on Length of stay between the cities but this is not conlcusive evidence.
+
+A patient's decile still has no effect on length of stay and the admission day is also no longer an effect. This makes sense as undiagnosed chest pain is likely a random event.
+
+
+```{r, warning=FALSE}
+set.seed(3)
+rrsea <- c()
+rrseb <- c()
+
+for (i in 1:100) {
+  rrsea[i] <- test.lm(cita.R074, LOS ~ AGE_ADM + GENDER + EVENT_TYPE +
+                      HLTHSPEC + AGE_ADM * multiple)
+
+  rrseb[i] <- test.lm(citb.R074, LOS ~ AGE_ADM + GENDER + EVENT_TYPE +
+                      HLTHSPEC + AGE_ADM * multiple) 
+}
+
+
+R074ab <- lm(LOS ~ AGE_ADM + GENDER + EVENT_TYPE + HLTHSPEC + 
+               AGE_ADM * multiple, data = cita.R074)
+summary(R074ab)
+
+par(mfrow=c(1,2))
+boxplot(rrsea, main = "City A R074 RRSE", ylim = c(0.1,0.9))
+boxplot(rrseb, main = "City B R074 RRSE", ylim = c(0.1,0.9))
+
+par(mfrow = c(2,2))
+plot(R074ab)
+```
+
+From the plots it appears that a local model greatly improves on the model performance. It appears there is evidence to suggest that LOS for R074 patients in city A is easier to predict than city B. I believe that this is mainly down to the stronger relationship between age and LOS for patients who stayed longer than a day. My reasoning for this is that when I fitted a model for city A with and without the interaction term the adjusted R-squared went from 0.8067 to 0.1691, this indicates that the interaction for these patients is easily the most important predictor in the model.
+
+Unfortunately from the diagnostic plots the model still fails the same assumptions of the linear model as the global model did. This suggests that in order to fit a linear model that meets the assumptions a specific range for length of stay may need to be modelled due to the two category nature of length of stay.
+
+\newpage
+
 4. Discuss why predicting LOS is a difficult task and reflect on the way bed counts (i.e. admissions) are currently handled. Is there any way this might be improved? Discuss some approaches to break the problem down into more tractable aspects for managing admissions and predicting LOS. What does this suggest about building a model for LOS over the entire country? (10 marks)
+
+From of all the models shown there is significant evidence that LOS is incredibly hard to predict due to the systematic skew of the data caused by operating procedures. It is clearly visible that each of wide range of treatments and procedures has unique characteristics that are very hard to assess on a consistent scale when many of the predictors provide a lack of information.
+
+There also appears to be evidence that every hospital operates differently based on their size. To obtain any reliable results I believe there is no feasible way to create a single model that can predict length of stay for a patient. At a minimum I believe for each hospital every ward should have it's own local model. Although the R074 models failed on model assumptions I still believe they showed evidence that the problem has to be reduced to a smaller problem within each location to understand any true relationships in the data. The differences in the two hospitals alone show conclusive evidence that LOS is affected by different aspects in different locations so there is no possible way a global model for the entire country can provide reliable information.
+
+Over time use of local modelling could allow more specific data to be collected which could further improve the models the effect of how each diagnosis and treatment given correlates to aspects of each individual patient so allocation of resources can further benefit both the efficiency 
+of the hospital and the quality of treatment a patient receives.
+
+I believe with some more work, a few of the approaches I trialed could be successful for managing aspects of hospital operations. As I mentioned above I believe a local model for each ward would help with this (something similar to how the R074 model approached the problem). I also believe the classification method I trialed earlier of predicting if a patient will stay for longer than a day could be a highly plausible and useful method due to the large amount of patients admitted only for a single day. Another interesting method I believe could be trialed for predicting bed counts is to try and predict the number of cases for each diagnosis that are likely over a certain time period and then use the length of stay from existing patients to try and predict the resources a hospital will need.
+
+Overall while modelling LOS as a global problem is difficult there are many possible ways it can be broken down to model specific aspects of it or to use the information available to solve other existing problems within the hospitals that could provide more information to model LOS itself.
+
+
 
